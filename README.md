@@ -1,5 +1,5 @@
 # Simply Kaspa Acceptance Tool
-A simple tool which adds to transactions_acceptances(transaction_id, block_hash)
+A simple tool which adds transaction acceptance data to the [indexer db](https://github.com/supertypo/simply-kaspa-indexer).
 
 ## Help
 ```
