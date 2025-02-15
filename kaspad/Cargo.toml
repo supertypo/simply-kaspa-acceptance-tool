@@ -17,6 +17,5 @@ kaspa-wrpc-client.workspace = true
 kaspa-rpc-core.workspace = true
 tokio.workspace = true
 deadpool.workspace = true
-futures.workspace = true
 workflow-core.workspace = true
 log.workspace = true
