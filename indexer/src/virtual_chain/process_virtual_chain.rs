@@ -20,6 +20,7 @@ pub async fn process_virtual_chain(
     let mut start_hash = start_hash;
 
     let start_time = Instant::now();
+    let mut total_rows_added = 0;
 
     while run.load(Ordering::Relaxed) {
         debug!("Getting virtual chain from start_hash {}", start_hash.to_string());
@@ -39,13 +40,15 @@ pub async fn process_virtual_chain(
                                     .unwrap(),
                                 last_accepting_block.header.blue_score
                             );
+                            total_rows_added += rows_added;
                             start_hash = last_accepting_block.header.hash;
                         }
                         // Default batch size is 1800 on 1 bps:
                         if added_blocks_count < 200 {
                             let time_to_sync = Instant::now().duration_since(start_time);
                             info!(
-                                "\x1b[32mVirtual chain processing completed! (in {}:{:0>2}:{:0>2}s)\x1b[0m",
+                                "\x1b[32mProcessing complete, added {} txs (in {}:{:0>2}:{:0>2}s)\x1b[0m",
+                                total_rows_added,
                                 time_to_sync.as_secs() / 3600,
                                 time_to_sync.as_secs() % 3600 / 60,
                                 time_to_sync.as_secs() % 60

@@ -3,10 +3,10 @@ use deadpool::managed::{Object, Pool};
 use kaspa_hashes::Hash as KaspaHash;
 use kaspa_wrpc_client::prelude::NetworkId;
 use log::{info, trace};
-use simply_kaspa_acceptance_tool_cli::cli_args::CliArgs;
-use simply_kaspa_acceptance_tool_database::client::KaspaDbClient;
 use simply_kaspa_acceptance_tool::signal::signal_handler::notify_on_signals;
 use simply_kaspa_acceptance_tool::virtual_chain::process_virtual_chain::process_virtual_chain;
+use simply_kaspa_acceptance_tool_cli::cli_args::CliArgs;
+use simply_kaspa_acceptance_tool_database::client::KaspaDbClient;
 use simply_kaspa_acceptance_tool_kaspad::pool::manager::KaspadManager;
 use std::env;
 use std::str::FromStr;
@@ -52,7 +52,7 @@ async fn start_processing(
         Some(start_hash) => {
             info!("Starting at user supplied block {start_hash}");
             KaspaHash::from_str(start_hash.as_str()).unwrap()
-        },
+        }
         None => {
             let (hash, blue_score) = database.select_oldest_chain_block_blue_score().await.unwrap();
             if blue_score > 80921063 {
