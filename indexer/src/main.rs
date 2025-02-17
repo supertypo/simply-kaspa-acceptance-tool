@@ -29,6 +29,7 @@ async fn main() {
     env::set_var("RUST_LOG_STYLE", if cli_args.log_no_color { "never" } else { "always" });
     env_logger::builder().target(env_logger::Target::Stdout).format_target(false).format_timestamp_millis().init();
 
+    info!("{} {}", env!("CARGO_PKG_NAME"), cli_args.version());
     trace!("{:?}", cli_args);
     let rpc_url = cli_args.rpc_url.clone().unwrap_or("wss://archival.kaspa.ws".to_string());
 
