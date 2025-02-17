@@ -1,8 +1,9 @@
 use clap::Parser;
 use deadpool::managed::{Object, Pool};
 use kaspa_hashes::Hash as KaspaHash;
+use kaspa_rpc_core::api::rpc::RpcApi;
 use kaspa_wrpc_client::prelude::NetworkId;
-use log::{info, trace};
+use log::{info, trace, warn};
 use simply_kaspa_acceptance_tool::signal::signal_handler::notify_on_signals;
 use simply_kaspa_acceptance_tool::virtual_chain::process_virtual_chain::process_virtual_chain;
 use simply_kaspa_acceptance_tool_cli::cli_args::CliArgs;
@@ -10,7 +11,7 @@ use simply_kaspa_acceptance_tool_database::client::KaspaDbClient;
 use simply_kaspa_acceptance_tool_kaspad::pool::manager::KaspadManager;
 use std::env;
 use std::str::FromStr;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::task;
 
@@ -37,11 +38,12 @@ async fn main() {
 
     let database = KaspaDbClient::new(&cli_args.database_url).await.expect("Database connection FAILED");
 
-    start_processing(cli_args.start_hash, kaspad_pool, database).await.expect("Unreachable");
+    start_processing(cli_args.start_hash, cli_args.max_blue_score, kaspad_pool, database).await.unwrap();
 }
 
 async fn start_processing(
     start_hash: Option<String>,
+    max_blue_score: Option<u64>,
     kaspad_pool: Pool<KaspadManager, Object<KaspadManager>>,
     database: KaspaDbClient,
 ) -> Result<(), ()> {
@@ -65,6 +67,28 @@ async fn start_processing(
             }
         }
     };
-    process_virtual_chain(run.clone(), start_hash, kaspad_pool.clone(), database.clone()).await;
+
+    let max_blue_score = match max_blue_score {
+        Some(max_blue_score) => {
+            info!("Stopping at user supplied blue_score {max_blue_score}");
+            max_blue_score
+        }
+        None => {
+            let mut max_blue_score = 0;
+            while run.load(Ordering::Relaxed) {
+                match kaspad_pool.get().await {
+                    Ok(kaspad) => {
+                        max_blue_score = kaspad.get_sink_blue_score().await.unwrap();
+                        break;
+                    }
+                    Err(e) => warn!("Failed to get sink blue_score: {e}"),
+                }
+            }
+            info!("Stopping at current blue_score {max_blue_score}");
+            max_blue_score
+        }
+    };
+
+    process_virtual_chain(run.clone(), start_hash, max_blue_score, kaspad_pool.clone(), database.clone()).await;
     Ok(())
 }

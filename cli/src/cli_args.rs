@@ -25,6 +25,8 @@ pub struct CliArgs {
         help = "Start block hash for virtual chain processing. If not specified the built-in default ccb8c53f3b0b742b4a8df654c29a852133cae8362d7f88efbddb0b2bf0da54e1 is used"
     )]
     pub start_hash: Option<String>,
+    #[clap(long, help = "Max blue score for virtual chain processing. Leave empty to stop at the start of the last batch")]
+    pub max_blue_score: Option<u64>,
 }
 
 impl CliArgs {
